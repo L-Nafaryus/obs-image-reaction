@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(image-reaction VERSION 1.2)
+project(image-reaction VERSION 1.3)
 
 set(PLUGIN_AUTHOR "scaled")
 set(PLUGIN_GIT ${PROJECT_NAME})

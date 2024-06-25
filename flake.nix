@@ -16,7 +16,7 @@
         in {
             obs-image-reaction = pkgs.stdenv.mkDerivation {
                 pname = "obs-image-reaction";
-                version = "1.2";
+                version = "1.3";
 
                 src = ./.;
                 
