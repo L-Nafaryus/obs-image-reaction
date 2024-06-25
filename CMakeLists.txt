@@ -1,31 +1,48 @@
-cmake_minimum_required(VERSION 3.5)
-project(image-reaction VERSION 1.0)
-set(PLUGIN_AUTHOR "scaled")
-set(PLUGIN_GIT image-reaction)
-set(LINUX_MAINTAINER_EMAIL "scaled@scaledteam.ru")
-set(MACOS_BUNDLEID "ru.scaledteam.image-reaction")
-set(CMAKE_CXX_STANDARD 11)
+cmake_minimum_required(VERSION 3.16)
 
-if (WIN32 OR APPLE)
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+project(image-reaction VERSION 1.2)
+
+set(PLUGIN_AUTHOR "scaled")
+set(PLUGIN_GIT ${PROJECT_NAME})
+set(LINUX_MAINTAINER_EMAIL "scaled@scaledteam.ru")
+set(PLUGIN_URL "https://obsproject.com/forum/resources/mute-filter.1478/")
+
+set(MACOS_BUNDLEID "ru.scaledteam.image-reaction")
+set(MACOS_PACKAGE_UUID "AC34BEA6-6AAB-4CAE-AE0F-222F49F0503A")
+set(MACOS_INSTALLER_UUID "4F2A848B-08BE-4EED-AD7F-824BD7B97A8A")
+
+find_package(libobs REQUIRED)
+include(cmake/ObsPluginHelpers.cmake)
+
+add_library(image-reaction MODULE src/image-reaction.c)
+
+target_link_libraries(image-reaction OBS::libobs)
+
+if(OS_WINDOWS)
+    # Enable Multicore Builds and disable FH4 (to not depend on VCRUNTIME140_1.DLL when building with VS2019)
+    if(MSVC)
+        add_definitions(/MP /d2FH4-)
+    endif()
+
+    target_link_libraries(${PROJECT_NAME} OBS::w32-pthreads)
+
+    configure_file(cmake/installer/installer-Windows.iss.in installer-Windows.generated.iss)
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-    add_definitions(-DLINUX=1)
-    add_definitions(-DUNIX=1)
-endif ()
+if(OS_LINUX)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
+endif()
 
-find_package(LibObs REQUIRED)
+if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -fvisibility=default")
 
-set(image-reaction_SOURCES image-reaction.c)
+    set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+    set(MACOSX_PLUGIN_GUI_IDENTIFIER "${MACOS_BUNDLEID}")
+    set(MACOSX_PLUGIN_BUNDLE_VERSION "${PROJECT_VERSION}")
+    set(MACOSX_PLUGIN_SHORT_VERSION_STRING "1")
 
-add_library(image-reaction MODULE
-        ${image-reaction_SOURCES})
+    configure_file(cmake/installer/installer-macOS.pkgproj.in installer-macOS.generated.pkgproj)
+endif()
 
-target_link_libraries(image-reaction
-    ${LIBOBS_LIBRARIES}
-    ${OBS_FRONTEND_LIB})
+setup_plugin_target(${PROJECT_NAME})
 
-include_directories("${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
-    ${LIBOBS_INCLUDE_DIR}
-)
